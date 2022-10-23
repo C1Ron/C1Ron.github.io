@@ -1,13 +1,14 @@
 ---
 layout: post
-title:  "Tutorial: jekyll and Github"
-date:   2022-10-21 17:15:23 +0200
+title:  "Tutorial 1: jekyll and Github-pages"
+date:   2022-10-21 17:10:00 +0200
 categories: jekyll update
 ---
 This post is written to share how to host a blog using `jekyll` and connect it to Github for deployment via `github-pages`.
 
 The following steps assumes that your working on a Windows machine, have a Github account and has `git-bash` installed on that machine.
 
+## Tutorial
 First of all, we need to install `ruby` and the `jekyll` bundler from [ruby-download].<br/>
 Install the `Ruby+Devkit 3.1.2-1` version and keep the default settings. 
 
@@ -70,3 +71,11 @@ Wait for about 5 minutes for the site to get deployed on Github. When ready, you
 ![pagesLive]({{site.baseurl}}/images/pagesLive.jpg)
 
 [ruby-download]: https://rubyinstaller.org/downloads/
+
+## Additional Info
+If you name your repository as `userName.github.io` and use the `master` branch to host the site, then you can get a website up and running:
+
+```
+Hello
+```
+

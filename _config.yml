@@ -18,11 +18,10 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: This is C1Ron's test-blog
+title: C1Ron-Blog
 email: ronnylandsverk@live.no
-description: >- # this means to ignore newlines until "baseurl:"
-  My first goal is to show how to create a GH-pages blog.
-  Kewords: Jekyll, Github, concrete tutorial
+description: # >- # this means to ignore newlines until "baseurl:"
+  Computer-science, programming and mathematics with application of modeling, dynamics and control.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: C1Ron
