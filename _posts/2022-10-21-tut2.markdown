@@ -1,0 +1,13 @@
+---
+layout: post
+title:  "Tutorial: Mathematical modeling with Python"
+date:   2022-10-21 17:15:23 +0200
+categories: jekyll update
+mathjax: true
+---
+
+This post will cover how to mathematically model a simple mechanical system and simulate the system using `Python`.
+
+<div>
+$$f(x) = \sum_{k=1}^{K}\alpha_{k}$$
+</div>
