@@ -1,13 +1,50 @@
 ---
 layout: post
-title:  "Tutorial 2: Mathematical modeling with Python"
+title:  "Tutorial 2: linear system simulation with Python"
 date:   2022-10-21 17:05:23 +0200
 categories: jekyll update
 mathjax: true
 ---
 
-This post will cover how to mathematically model a simple mechanical system and simulate the system using `Python`.
+This post will cover how to simulate a linear system using `Python`. <br/>
+The system will a basic DC motor with an attached load, commonly represented as
+![dcmotor]({{site.baseurl}}/images/dcmotor.jpg)
+and in block diagram form with a simple P position controller
+![dcmotor2]({{site.baseurl}}/images/dcmotor2.jpg)
+We have Kirchoffs voltage law for the electrical system: 
 
-<div>
-$$f(x) = \sum_{k=1}^{K}\alpha_{k}$$
-</div>
+$$ v(t)=v_R(t)+v_L(t)+e(t)$$
+
+where $$v$$ is the supply voltage, $$v_R$$ and $$v_L$$ are voltages across the armature resistor and inductor, and $$e$$ is the back-emf.
+
+We have Newton's 2nd law for the mechanical system:
+
+$$ J_m\alpha(t)=T_{em}(t)-T_{f}(t)-T_L(t) $$
+
+where $$J_m$$ and $$\alpha$$ are the moment of inertia and acceleration of the shaft. Furthermore $$T_{em}$$, $$T_f$$, $$T_L$$ are the electromagnetic, friction and load torques, respectively.
+
+Our two systems get coupled electromechanically by: 
+<ul>
+<li>torque is propertional to armature current:  \(\hspace{0.5cm}T_{em}(t)=K_i\cdot i(t)\)</li>
+<li>back-emf is proportional to motor speed:   \(\hspace{0.7cm}e(t)=K_e \cdot\omega(t)\)</li>
+</ul>
+where $$K_e$$ and $$K_i$$ are motor constants and $$i$$ and $$\omega$$ are motor current and speed. <br/>
+Also the voltage drops across the circuit elements can be written $$v_R=R_a\cdot i$$ and $$v_L=L_a\cdot di/dt$$.
+
+Finally, the friction is assumed to be a viscous friction: $$T_f=b\cdot\omega$$, always working against the speed.
+
+The coupled system can be written:
+
+$$\begin{align}
+v(t)&=R_ai(t)+L_a\frac{di}{dt}+K_e\frac{d\theta}{dt}\\
+J_m\frac{d^2\theta}{dt^2} &= K_ii(t)-b\frac{d\theta}{dt}-T_L
+\end{align}$$
+
+For a position control we use state variables $$\mathbf{x}=\begin{bmatrix}\theta\\ \dot{\theta}\\ i\end{bmatrix}$$, 
+and input vector $$\mathbf{u}=\begin{bmatrix}0\\T_L\\v\end{bmatrix}$$ 
+for a linear state-space representation $$\dot{\mathbf{x}}=\mathbf{A}\mathbf{x}+\mathbf{B}\mathbf{u}$$ of the system.
+
+The matrices turns out to be
+
+$$\mathbf{A}=\begin{bmatrix}0&1&0\\0&-b/J_m&K_i/J_m\\0&-K_e/L_a&-R_a/L_a\end{bmatrix}
+\hspace{1cm} \mathbf{B}=\begin{bmatrix}0&0&0\\0&-1/J_m&0\\0&0&1/L_a\end{bmatrix}$$
