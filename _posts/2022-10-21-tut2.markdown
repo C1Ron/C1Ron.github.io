@@ -60,11 +60,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import odeint 
 plt.close('all')
-
+plt.rcParams["axes.labelsize"] = 18
+plt.rc('xtick', labelsize=18)
+plt.rc('ytick', labelsize=18)
 # Equation of motion
-def eom(x,t,J,R,L,Ke,b,Kp,T):
-    A = np.array([[0, 1, 0],[0, -b/J, Ke/J], [0, -Ke/L, -R/L]])
-    B = np.array([[0, 0, 0], [0, -1/J, 0], [0, 0, 1/L]])
+def eom(x,t,Jm,Ra,La,Ke,Ki,b,Kp,T):
+    A = np.array([[0, 1, 0],[0, -b/Jm, Ki/Jm], [0, -Ke/La, -Ra/La]])
+    B = np.array([[0, 0, 0], [0, -1/Jm, 0], [0, 0, 1/La]])
     if t < 0.5:
         theta_ref = 10*t
     else:
@@ -73,18 +75,20 @@ def eom(x,t,J,R,L,Ke,b,Kp,T):
     return A.dot(x) + B.dot(u)
 
 # Parameter definitions
-J = 1e-1;
-b = 10;
-R = 30;
-L = 2;
-Ke = 10;
-Kp = 1000;
-T = 2;
+Jm = 1e-1
+b = 10
+Ra = 30
+La = 2
+Ke = 10
+Ki = 10
+
+Kp = 1000
+T = 50
 
 # Time integration
 x0 = np.array([0,0,0])
 t = np.linspace(0,1,1000)
-sol = odeint(eom, x0, t, args=(J,R,L,Ke,b,Kp,T))
+sol = odeint(eom, x0, t, args=(Jm,Ra,La,Ke,Ki,b,Kp,T))
 
 # Visualizing results
 theta_ref = [10*x if x < 0.5 else 5 for x in t]
@@ -92,16 +96,16 @@ fig = plt.figure(figsize=[12,7])
 ax1 = fig.add_subplot(211)
 ax1.plot(t, sol[:,0], t, theta_ref, '--')
 ax1.autoscale(enable=True, axis='both', tight=True)
-ax1.set_xlabel('time', fontsize=18)
-ax1.set_ylabel('rad',fontsize=18)
+ax1.set_xlabel('time')
+ax1.set_ylabel('rad')
 ax1.legend(['theta','theta_ref'], fontsize=18, loc='center right')
 ax1.grid()
 
 ax2 = fig.add_subplot(212)
 ax2.plot(t, sol[:,1])
 ax2.autoscale(enable=True, axis='both', tight=True)
-ax2.set_xlabel('time', fontsize=18)
-ax2.set_ylabel('rad/s', fontsize=18)
+ax2.set_xlabel('time')
+ax2.set_ylabel('rad/s')
 ax2.legend(['theta_dot'], fontsize=18)
 ax2.grid()
 {% endhighlight %}
