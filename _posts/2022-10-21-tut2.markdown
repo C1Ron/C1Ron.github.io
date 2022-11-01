@@ -50,7 +50,7 @@ The matrices turns out to be
 $$\mathbf{A}=\begin{bmatrix}0&1&0\\0&-b/J_m&K_i/J_m\\0&-K_e/L_a&-R_a/L_a\end{bmatrix}
 \hspace{1cm} \mathbf{B}=\begin{bmatrix}0&0&0\\0&-1/J_m&0\\0&0&1/L_a\end{bmatrix}$$
 
-To test the model we simulate with a simple P controller $$v=K_P(\theta_r-\theta)$$ and neglect saturation of the system input.
+To test the model we simulate with a simple P controller $$v=K_P\cdot(\theta_r-\theta)$$ and neglect saturation of the system input.
 The motor parameters are randomly chosen without care.
 
 ## Simulation using Python
