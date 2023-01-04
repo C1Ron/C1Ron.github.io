@@ -1,14 +1,15 @@
 ---
 layout: post
-title: "Tutorial 3"
+title:  ""
 categories: jekyll update
 mathjax: true
-permalink: /Tutorial/
+permalink: /tut3/
 ---
+## Cart-Pole Modeling and LQR using MATLAB
 This post will share how to model a cart-pole and simulate the dynamics using `MATLAB`.
 The goal is to first do this in `MATLAB` and later to do the same steps using `Python` and also to do the animation using `Blender`.
 
-## Mathematical Model
+### Mathematical Model
 The system consists of a cart and a pendulum fixed to the centroid of the cart body.   
 The cart is actuated by a force $$F$$. The system and a free-body-diagram of the two bodies are shown:
 ![cart-pole]({{site.baseurl}}/images/cart-pole.jpg)
@@ -60,7 +61,7 @@ Finally, we want a system of the form $$\dot{\mathbf{x}}=\mathbf{f}(\mathbf{x},\
 
 $$\dot{\mathbf{x}}=\begin{bmatrix}\dot{x}\\\dot{\theta}\\\mathbf{M}^{-1}(\mathbf{u}+\mathbf{v})\end{bmatrix}$$
 
-## Linearization and State-Feedback
+### Linearization and State-Feedback
 To employ LQR in feedback control, we need a linear system $$\dot{\mathbf{x}}=\mathbf{A}\mathbf{x}+\mathbf{B}\mathbf{u}$$.
 We linearize about the unstable fixed point $$\mathbf{x}_e=\begin{bmatrix}x&\pi&0&0\end{bmatrix}^T$$ and $$\mathbf{u}_e=\mathbf{0}$$. 
 The matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ can be determined analytically by
@@ -72,7 +73,7 @@ However, this requires us to solve the matrix equation of motion algebraically f
 To avoid that we use the symbolic toolbox of MATLAB. The following section shows MATLAB code to simulate the nonlinear system.
 Also, we linearize the system using the `jacobian()` function of the symbolic toolbox in MATLAB, 
 hence finding the matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ which are required for state-feedback control.
-## Equations of motion and Animation
+### Equations of motion and Animation
 The following code-snippet shows how to specify the nonlinear equations of motion in a form that MATLAB's `ode` suite will accept the function.
 There are two functions in this snippet: one for the cart-pole model and one for animation. 
 **Note that you should place these in the bottom of the script**.
@@ -106,7 +107,7 @@ function anim(t,xx,params,b)
 end
 {% endhighlight %}
 
-## Testing the Model
+### Testing the Model
 First we test the behaviour of the system without any controller. We let the pendulum go from a horizontal position $$\theta=\pi/2$$
 and simulate the system for 15 sec. We plot the response and look at the animation.
 {% highlight MATLAB %}
@@ -148,23 +149,24 @@ end
 ![cart-pole-plot1]({{site.baseurl}}/images/cart-pole-plot1.jpg)
 Keep in mind that there is no friction included in this model when looking at the animation.
 From my personal intuition, it seems to match expected physical behaviour considering the length of the arm and the relative mass of the bodies.
-## Implementing Feedback Control
+### Implementing Feedback Control
 Now we linearize the system and employ LQR to find the state feedback control $$\mathbf{u}=-\mathbf{K}(\mathbf{x}-\mathbf{x}_e)$$.
 Recall that our problem is to apply a force on the cart such that the cart moves in such a way that the pendulum swings from $$\theta=0$$ to $$\theta=\pi$$. 
 {% highlight MATLAB %}
 %% Linearize using Symbolic Toolbox
 xsym = sym('x', [4,1]);
-Fsym = sym('F');
+Fsym = sym('F',[2,1]);
 tsym = sym('t');
-A = jacobian(model(tsym, xsym, [Fsym;0], params), xsym);
-B = jacobian(model(tsym, xsym, [Fsym;0], params), Fsym);
+A = jacobian(model(tsym, xsym, Fsym, params), xsym);
+B = jacobian(model(tsym, xsym, Fsym, params), Fsym);
 A = double(subs(A, xsym, [xsym(1); pi; 0; 0]));
 B = double(subs(B, xsym, [xsym(1); pi; 0; 0]));
 clear xsym Fsym tsym
 
 %% State feedback control with LQR
-Q = diag([3,30,1,1]);
-K = lqr(A,B,Q,1e-4);
+Q = diag([2,1,1,1]);
+R = 1;
+K = lqr(A,B,Q,R);
 % Stabilize about the (unstable) fixed-point [0; pi; 0; 0]
 u = @(xx) - K * (xx - [0; pi; 0; 0]); 
 xx0 = [0;0;0;0];
@@ -193,4 +195,4 @@ end
 {% endhighlight %}
 
 ![cart-pole-plot2]({{site.baseurl}}/images/cart-pole-plot2.jpg)
-When watching the animation, we see that the cart shoots off to the right and comes back with the pendulum on its way up in upright position.
+Notice that the cart accelerates quickly to the left before accelerating to the right to lift the payload.

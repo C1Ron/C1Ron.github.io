@@ -61,4 +61,4 @@ markdown: kramdown
 include:
   - _pages
 
-permalink: /:categories/:title/
+#permalink: /:categories/:title/
