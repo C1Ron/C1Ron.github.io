@@ -4,7 +4,7 @@
 
 layout: home
 ---
-### Welcome to my blog. You can do anything, but you have to do it well !
+
 * [Tutorial 1: Jekyll and Github](/tut1/)
 * [Tutorial 2: Linear systems with Python](/tut2/)
 * [Tutorial 3: Cart-Pole and LQR with MATLAB](/tut3/)
