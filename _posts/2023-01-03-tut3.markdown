@@ -6,6 +6,7 @@ categories: jekyll update
 mathjax: true
 ---
 This post will share how to model a cart-pole and simulate the dynamics using `MATLAB`.
+The goal is to first do this in `MATLAB` and later to do the same steps using `Python` and also to do the animation using `Blender`.
 
 ## Mathematical Model
 The system consists of a cart and a pendulum fixed to the centroid of the cart body.   
@@ -18,7 +19,8 @@ $$\mathbf{r}_1=\begin{bmatrix}x\\y\end{bmatrix}, \hspace{1cm} \mathbf{r}_2=\math
 
 We assume $$\dot{y}=\ddot{y}=0$$, i.e. that the vertical component of $$m_1$$ is constant:
 
-$$\dot{\mathbf{r}}_1 = \begin{bmatrix}\dot{x}\\0\end{bmatrix}, \hspace{1cm} \dot{\mathbf{r}}_2=\dot{\mathbf{r}}_1+\ell\dot{\theta}\begin{bmatrix}\cos(\theta)\\\sin(\theta)\end{bmatrix}, \hspace{1cm}\ddot{\mathbf{r}}_1 = \begin{bmatrix}\ddot{x}\\0\end{bmatrix}, \hspace{1cm} \ddot{\mathbf{r}}_2=\ddot{\mathbf{r}}_1 + \ell\ddot{\theta}\begin{bmatrix}\cos(\theta)\\\sin(\theta)\end{bmatrix} + \ell\dot{\theta}^2\begin{bmatrix}-\sin(\theta)\\\cos(\theta)\end{bmatrix}$$
+$$\begin{align}\dot{\mathbf{r}}_1 &= \begin{bmatrix}\dot{x}\\0\end{bmatrix}, \hspace{1cm} \dot{\mathbf{r}}_2=\dot{\mathbf{r}}_1+\ell\dot{\theta}\begin{bmatrix}\cos(\theta)\\\sin(\theta)\end{bmatrix}\\
+\ddot{\mathbf{r}}_1 &= \begin{bmatrix}\ddot{x}\\0\end{bmatrix}, \hspace{1cm} \ddot{\mathbf{r}}_2=\ddot{\mathbf{r}}_1 + \ell\ddot{\theta}\begin{bmatrix}\cos(\theta)\\\sin(\theta)\end{bmatrix} + \ell\dot{\theta}^2\begin{bmatrix}-\sin(\theta)\\\cos(\theta)\end{bmatrix}\end{align}$$
 
 Following the FBD we find the translational equations of motion for body 1:
 
@@ -67,10 +69,13 @@ $$\mathbf{A}=\frac{\partial\mathbf{f}}{\partial\mathbf{x}}\Biggr\rvert_{\mathbf{
 \hspace{1cm}\mathbf{B}=\frac{\partial \mathbf{f}}{\partial\mathbf{u}}\Biggr\rvert_{\mathbf{x}=\mathbf{x}_e,\mathbf{u}=\mathbf{u}_e}$$
 
 However, this requires us to solve the matrix equation of motion algebraically for $$\ddot{x}$$ and $$\ddot{\theta}$$, typically using Cramer's rule.
-To avoid that we use the symbolic toolbox of MATLAB. The following section shows MATLAB code to linearize the system for state-feedback control
+To avoid that we use the symbolic toolbox of MATLAB. The following section shows MATLAB code to simulate the nonlinear system.
+Also, we linearize the system using the `jacobian()` function of the symbolic toolbox in MATLAB, 
+hence finding the matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ which are required for state-feedback control.
 ## Equations of motion and Animation
 The following code-snippet shows how to specify the nonlinear equations of motion in a form that MATLAB's `ode` suite will accept the function.
-There are two functions in this snippet: one for the cart-pole model and one for animation. Note that you should place these in the bottom of script.
+There are two functions in this snippet: one for the cart-pole model and one for animation. 
+**Note that you should place these in the bottom of the script**.
 {% highlight MATLAB %}
 %% Equations of motion in MATLAB ODE's notation
 function xxdot = model(t, xx, u, params)
