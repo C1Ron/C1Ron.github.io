@@ -10,7 +10,7 @@ This post is written to share how to host a blog using `jekyll` and connect it t
 The following steps assumes that your working on a Windows machine, have a Github account and has `git-bash` installed on that machine.
 
 ### Install Jekyll and Serve from Github
-First of all, we need to install `ruby` and the `jekyll` bundler from [ruby-download].<br/>
+First of all, we need to install `ruby` and the `jekyll` bundler from [ruby-download]. <br/>
 Install the `Ruby+Devkit 3.1.2-1` version and keep the default settings. 
 
 When your installation is about to complete, you get prompted by a popup. <br/> 
@@ -103,7 +103,7 @@ Then, add the following snippet in the `_layout/post.html` file:
 {% highlight python %}
 {% raw %}
 {% if page.mathjax  %}
-<script type="text/javascript" async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML'></script>
+<script type="text/javascript" async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML'> </script>
 {% endif %}
 {% endraw %}
 {% endhighlight %}
