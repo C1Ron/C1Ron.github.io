@@ -10,9 +10,9 @@ This post will share how to model a cart-pole and simulate the dynamics using `M
 The goal is to first do this in `MATLAB` and later to do the same steps using `Python` and also to do the animation using `Blender`.
 
 ### Mathematical Model
-The system consists of a cart and a pendulum fixed to the centroid of the cart body.   
+The system consists of a frictionless cart and a pendulum fixed to the centroid of the cart body.   
 The cart is actuated by a force $$F$$. The system and a free-body-diagram of the two bodies are shown:
-![cart-pole]({{site.baseurl}}/images/cart-pole.jpg)
+![cart-pole2]({{site.baseurl}}/images/cart-pole2.jpg)
 We denote the position of $$m_1$$ by $$(x,y)$$ and use $$\theta$$ as the pendulum angle relative to static equilibrium.
 First we express the two vectors and take their time-derivatives for later use
 
@@ -145,6 +145,7 @@ for i = 1:numel(t)
         axis([-3,3,-3,3])
     end
 end
+
 {% endhighlight %}
 ![cart-pole-plot1]({{site.baseurl}}/images/cart-pole-plot1.jpg)
 Keep in mind that there is no friction included in this model when looking at the animation.
@@ -155,17 +156,18 @@ Recall that our problem is to apply a force on the cart such that the cart moves
 {% highlight MATLAB %}
 %% Linearize using Symbolic Toolbox
 xsym = sym('x', [4,1]);
-Fsym = sym('F',[2,1]);
+Fsym = sym('F');
 tsym = sym('t');
-A = jacobian(model(tsym, xsym, Fsym, params), xsym);
-B = jacobian(model(tsym, xsym, Fsym, params), Fsym);
+usym = [Fsym; 0];
+A = jacobian(model(tsym, xsym, usym, params), xsym);
+B = jacobian(model(tsym, xsym, usym, params), Fsym);
 A = double(subs(A, xsym, [xsym(1); pi; 0; 0]));
 B = double(subs(B, xsym, [xsym(1); pi; 0; 0]));
-clear xsym Fsym tsym
+clear xsym Fsym tsym usym
 
 %% State feedback control with LQR
-Q = diag([2,1,1,1]);
-R = 1;
+Q = diag([5000,3000,1,1]);
+R = 0.15;
 K = lqr(A,B,Q,R);
 % Stabilize about the (unstable) fixed-point [0; pi; 0; 0]
 u = @(xx) - K * (xx - [0; pi; 0; 0]); 
@@ -175,24 +177,31 @@ xx0 = [0;0;0;0];
 %% Plot results and animate
 fig2 = figure(2);
 subplot(211);
-p1 = plot(t,xx(:, [1,3]));
+p1 = plotyy(t,xx(:, 1), t, xx(:,3));
 title('Cart translation');
 legend('x', 'xdot');
 subplot(212);
-p2 = plot(t, xx(:, [2,4]));
+p2 = plotyy(t, xx(:,2), t, xx(:,4));
 title('Pole rotation');
 legend('theta', 'thetadot');
+line([0,15],[pi,pi],'linestyle','--','color','black')
 % Animate
+fig4 = figure(4);
 for i = 1:numel(t)
-    if mod(i,10) == 0
-        figure(fig3)
+    if mod(i, 20) == 0
+        figure(fig4)
         clf
         anim(t(i), xx(i,:), params, 1)
         axis([-5,5,-5,5])
+        axis equal
         drawnow
     end
 end
+
+
 {% endhighlight %}
 
 ![cart-pole-plot2]({{site.baseurl}}/images/cart-pole-plot2.jpg)
-Notice that the cart accelerates quickly to the left before accelerating to the right to lift the payload.
+Recall that the system is underactuated. I.e. can only reach the uncontrollable state $$\theta$$ indirectly via the cart-force $$F$$.
+The cart accelerates to the right, overshooting the desired payload angle, and comes back to stabilize it at $$\theta=\pi$$ near the desired cart-position.
+Note that the figures above have two vertical axes, with position along the left axis and velocity along the right.
