@@ -5,7 +5,7 @@ categories: jekyll update
 mathjax: true
 permalink: /tut3/
 ---
-## Cart-Pole Modeling and LQR using MATLAB
+## Cart-Pole Modeling and LQR using MATLAB or Python
 This post will share how to model a cart-pole and simulate the dynamics using `MATLAB`.
 The goal is to first do this in `MATLAB` and later to do the same steps using `Python` and also to do the animation using `Blender`.
 
@@ -205,3 +205,121 @@ end
 Recall that the system is underactuated. I.e. can only reach the uncontrollable state $$\theta$$ indirectly via the cart-force $$F$$.
 The cart accelerates to the right, overshooting the desired payload angle, and comes back to stabilize it at $$\theta=\pi$$ near the desired cart-position.
 Note that the figures above have two vertical axes, with position along the left axis and velocity along the right.
+
+### Python Code
+This section shows `Python` code to do the same steps. In the first part of the code, we import required libraries and define three functions:
+* one for open-loop simulation
+* one to define the model symbolically which is required for linearization
+* and finally, closed-loop simulation   
+
+In order to run the code, you need the following libraries installed
+
+* Numpy
+* Sympy
+* Scipy
+* Matplotlib
+* Python Control Systems Library 
+
+{% highlight python %}
+import numpy as np
+import matplotlib.pyplot as plt
+import sympy as sm
+from scipy.integrate import odeint
+import control.matlab as cm
+
+plt.close('all')
+
+def openLoop(xx, t,  u, m1, m2, L, g):
+    x,theta,xdot,thetadot = xx
+    M = np.array([[m1+m2, m2*L*np.cos(theta)],[m2*L*np.cos(theta), m2*L**2]])
+    v = np.array([[m2*thetadot**2*np.sin(theta)],[-m2*g*L*np.sin(theta)]])
+    temp = np.linalg.inv(M) @ (u + v)
+    xxdot = [xdot, thetadot, temp[0,0], temp[1,0]]
+    return xxdot
+
+def modelSym(xx, t, u, m1, m2, L, g):
+    x,theta,xdot,thetadot = xx
+    M = sm.Matrix([[m1+m2, m2*L*sm.cos(theta)], [m2*L*sm.cos(theta), m2*L**2]])
+    v = sm.Matrix([m2*thetadot**2*sm.sin(theta), -m2*g*L*sm.sin(theta)])
+    temp = M.inv() @ (u+v)
+    return sm.Matrix([xdot, thetadot, temp[0,0], temp[1,0]])
+
+def closedLoop(xx, t, m1, m2, L, g):
+    x,theta,xdot,thetadot = xx
+    M = np.array([[m1+m2, m2*L*np.cos(theta)],[m2*L*np.cos(theta), m2*L**2]])
+    v = np.array([[m2*thetadot**2*np.sin(theta)],[-m2*g*L*np.sin(theta)]])
+    u = - (K @ (xx - [0, np.pi, 0, 0])).T
+    temp = np.linalg.inv(M) @ (u + v)
+    xxdot = [xdot, thetadot, temp[0,0], temp[1,0]]
+    return xxdot
+{% endhighlight %}
+
+### Open-loop testing
+To test the model in open-loop, we do the same as before i.e. we drop the pendulum from a horizontal position $$\theta=\pi/2$$
+{% highlight python %}
+#%% Open-Loop Simulation
+u = np.array([[0,0]]).T
+xx0 = [0, np.pi/2, 0, 0]
+t = np.linspace(0,15,2000)
+xx = odeint(openLoop, xx0, t, args=(u,5,2,2,9.81))
+
+#%% Plot
+fig, (ax11, ax12) = plt.subplots(nrows=2, ncols=1, figsize=[14,7])
+ax11.plot(t, xx[:,0], t, xx[:,2])
+ax12.plot(t, xx[:,1], t, xx[:,3])
+
+ax11.set_xlim([t[0], t[-1]])
+ax12.set_xlim([t[0], t[-1]])
+ax11.set_title("Cart translation")
+ax12.set_title("Pole rotation")
+ax11.legend(['x', 'xdot'], loc='upper right')
+ax12.legend(['theta', 'thetadot'], loc='upper right')
+{% endhighlight %}
+![cart-pole-plot1]({{site.baseurl}}/images/cart-pole-plot1.png)
+Then we do the linearization required for LQR and simulate the closed-loop model
+{% highlight python %}
+#%% Implement LQR
+x_s = sm.Symbol('x')
+xdot_s = sm.Symbol('xdot')
+theta_s = sm.Symbol('theta')
+thetadot_s = sm.Symbol('thetadot')
+t_s = sm.Symbol('t')
+F_s = sm.Symbol('F')
+
+xx_s = sm.Matrix([x_s, theta_s, xdot_s, thetadot_s])
+u_s = sm.Matrix([F_s, sm.Symbol('0')])
+
+xxdot_s = modelSym(xx_s, t_s, u_s, 5, 2, 2, 9.81)
+A = xxdot_s.jacobian(xx_s)
+B = xxdot_s.jacobian([F_s])
+
+A = sm.lambdify((x_s, theta_s, xdot_s, thetadot_s, F_s), A, modules='numpy')
+B = sm.lambdify((x_s, theta_s, xdot_s, thetadot_s, F_s), B, modules='numpy')
+A = A(0, np.pi, 0, 0, 0)
+B = B(0, np.pi, 0, 0, 0)
+
+
+Q = np.array([[500,0,0,0],[0,3,0,0],[0,0,1,0],[0,0,0,1]])
+R = 0.1
+K = cm.lqr(A,B,Q,R)[0]
+
+#%% Close-loop Simulation
+xx0 = [0, 0, 0, 0]
+xx = odeint(closedLoop, xx0, t, args=(5,2,2,9.81))
+
+fig2, (ax21, ax22) = plt.subplots(nrows=2, ncols=1, figsize=[14,7])
+ax21.plot(t, xx[:,0], t, xx[:,2])
+ax22.plot(t, xx[:,1], t, xx[:,3])
+
+ax21.set_xlim([t[0], t[-1]])
+ax22.set_xlim([t[0], t[-1]])
+ax21.set_title("Cart translation")
+ax22.set_title("Pole rotation")
+ax21.legend(['x', 'xdot'], loc='upper right')
+ax22.legend(['theta', 'thetadot'], loc='upper right')
+
+ax22.plot([0,15], [np.pi, np.pi], 'k--')
+
+np.savetxt('data.txt', xx, delimiter=',')
+{% endhighlight %}
+![cart-pole-plot2]({{site.baseurl}}/images/cart-pole-plot2.png)
