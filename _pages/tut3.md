@@ -166,8 +166,8 @@ B = double(subs(B, xsym, [xsym(1); pi; 0; 0]));
 clear xsym Fsym tsym usym
 
 %% State feedback control with LQR
-Q = diag([5000,3000,1,1]);
-R = 0.15;
+Q = diag([500,50,1,1]);
+R = 0.1;
 K = lqr(A,B,Q,R);
 % Stabilize about the (unstable) fixed-point [0; pi; 0; 0]
 u = @(xx) - K * (xx - [0; pi; 0; 0]); 
