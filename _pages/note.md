@@ -1,6 +1,6 @@
 ---
 layout: page
-title:  "note"
+title:  ""
 categories: jekyll update
 permalink: /note/
 mathjax: true

@@ -5,9 +5,9 @@ categories: jekyll update
 mathjax: true
 permalink: /tut3/
 ---
-## Cart-Pole Modeling and LQR using MATLAB or Python
+## Cart-Pole with MATLAB and Python
 This post will share how to model a cart-pole and simulate the dynamics using `MATLAB`.
-The goal is to first do this in `MATLAB` and later to do the same steps using `Python` and also to do the animation using `Blender`.
+The goal is to first do this in `MATLAB` and later to do the same steps using `Python`.
 
 ### Mathematical Model
 The system consists of a frictionless cart and a pendulum fixed to the centroid of the cart body.   
@@ -55,31 +55,36 @@ m_2\ell^2\ddot{\theta} + m_2\ell\ddot{x}\cos(\theta) &= -m_2g\ell\sin(\theta)\en
 
 In matrix form:
 
-$$\begin{bmatrix}m_1+m_2&m_2\ell\cos(\theta)\\m_2\ell\cos(\theta)&m_2\ell^2\end{bmatrix}\begin{bmatrix}\ddot{x}\\\ddot{\theta}\end{bmatrix}=\begin{bmatrix}F\\0\end{bmatrix}+\begin{bmatrix}m_2\ell\dot{\theta}^2\sin(\theta)\\-m_2g\ell\sin(\theta)\end{bmatrix}$$
+$$\begin{bmatrix}m_1+m_2&m_2\ell\cos(\theta)\\m_2\ell\cos(\theta)&m_2\ell^2\end{bmatrix}\begin{bmatrix}\ddot{x}\\\ddot{\theta}\end{bmatrix}=\begin{bmatrix}F\\0\end{bmatrix}+\begin{bmatrix}m_2\ell\dot{\theta}^2\sin(\theta)\\-m_2g\ell\sin(\theta)\end{bmatrix}\hspace{1cm}\text{or}\hspace{1cm}\mathbf{M}\begin{bmatrix}\ddot{x}\\\ddot{\theta}\end{bmatrix}=\mathbf{u}+\mathbf{v}$$
 
-Finally, we want a system of the form $$\dot{\mathbf{x}}=\mathbf{f}(\mathbf{x},\mathbf{u})$$ where $$\mathbf{x}$$ is a state vector, $$\mathbf{f}$$ is some nonlinear vector function and $$\mathbf{u}$$ is the input for our system. In this regard, we let $$\mathbf{x}=\begin{bmatrix}x&\theta & \dot{x}&\dot{\theta}\end{bmatrix}^T$$ and $$\mathbf{u}=\begin{bmatrix}F&0\end{bmatrix}^T$$. The system can then be written as
+Finally, we want a system of the form $$\dot{\mathbf{x}}=\mathbf{f}(\mathbf{x},F)$$ where $$\mathbf{x}$$ is a state vector, $$\mathbf{f}$$ is some nonlinear vector function and $$F$$ is the force-input for our system. The system can then be written as
 
-$$\dot{\mathbf{x}}=\begin{bmatrix}\dot{x}\\\dot{\theta}\\\mathbf{M}^{-1}(\mathbf{u}+\mathbf{v})\end{bmatrix}$$
+$$\dot{\mathbf{x}}=\mathbf{f}(\mathbf{x},F)=\begin{bmatrix}\dot{x}\\\dot{\theta}\\\mathbf{M}^{-1}(\mathbf{u}+\mathbf{v})\end{bmatrix}, \hspace{1cm}\mathbf{x}=\begin{bmatrix}x\\\theta\\\dot{x}\\\dot{\theta}\end{bmatrix},\hspace{1cm}\mathbf{u}=\begin{bmatrix}F\\0\end{bmatrix}$$
 
 ### Linearization and State-Feedback
 To employ LQR in feedback control, we need a linear system $$\dot{\mathbf{x}}=\mathbf{A}\mathbf{x}+\mathbf{B}\mathbf{u}$$.
-We linearize about the unstable fixed point $$\mathbf{x}_e=\begin{bmatrix}x&\pi&0&0\end{bmatrix}^T$$ and $$\mathbf{u}_e=\mathbf{0}$$. 
-The matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ can be determined analytically by
+We linearize about the unstable fixed point and denote the equilibrium points as $$\mathbf{x}_e$$ and $$F_e$$. 
+The matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ can be determined analytically by evaluating the *Jacobian* at the fixed point:
 
-$$\mathbf{A}=\frac{\partial\mathbf{f}}{\partial\mathbf{x}}\Biggr\rvert_{\mathbf{x}=\mathbf{x}_e, \mathbf{u}=\mathbf{u}_e}, 
-\hspace{1cm}\mathbf{B}=\frac{\partial \mathbf{f}}{\partial\mathbf{u}}\Biggr\rvert_{\mathbf{x}=\mathbf{x}_e,\mathbf{u}=\mathbf{u}_e}$$
+$$\mathbf{A}=\frac{\partial\mathbf{f}}{\partial\mathbf{x}}\Biggr\rvert_{\mathbf{x}=\mathbf{x}_e, \ F=F_e}, 
+\hspace{1cm}\mathbf{B}=\frac{\partial \mathbf{f}}{\partial F}\Biggr\rvert_{\mathbf{x}=\mathbf{x}_e,\ F=F_e}, \hspace{1cm}
+\mathbf{x}_e=\begin{bmatrix}x\\\pi\\0\\0\end{bmatrix},\hspace{1cm}F_e=0$$
 
-However, this requires us to solve the matrix equation of motion algebraically for $$\ddot{x}$$ and $$\ddot{\theta}$$, typically using Cramer's rule.
-To avoid that we use the symbolic toolbox of MATLAB. The following section shows MATLAB code to simulate the nonlinear system.
-Also, we linearize the system using the `jacobian()` function of the symbolic toolbox in MATLAB, 
-hence finding the matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ which are required for state-feedback control.
+Calculating the *Jacobian* requires us to first solve the matrix equation of motion algebraically for $$\ddot{x}$$ and $$\ddot{\theta}$$, typically using
+*Cramer's rule*. This is ok for this system, but for systems involving more than two state variables, hand-written calculations are errorprone and quickly
+become a mess. Therefore, we show how to use the symbolic toolbox of MATLAB to do the work for us. 
+
+In the following section, we linearize the system using the `jacobian()` function of the symbolic toolbox in MATLAB, 
+hence finding the matrices $$\mathbf{A}$$ and $$\mathbf{B}$$ which are required for LQR. We then use state-feedback control to stabilize the
+payload near the unstable fixed point.
+
 ### Equations of motion and Animation
 The following code-snippet shows how to specify the nonlinear equations of motion in a form that MATLAB's `ode` suite will accept the function.
 There are two functions in this snippet: one for the cart-pole model and one for animation. 
 **Note that you should place these in the bottom of the script**.
 {% highlight MATLAB %}
 %% Equations of motion in MATLAB ODE's notation
-function xxdot = model(t, xx, u, params)
+function xxdot = model(t, xx, F, params)
     % States
     x = xx(1);
     theta = xx(2);
@@ -92,6 +97,7 @@ function xxdot = model(t, xx, u, params)
     g = params.g;
     % Model
     M = [m1 + m2, m2*L*cos(theta); m2*L*cos(theta), m2*L^2];
+    u = [F; 0];
     v = [m2*thetadot^2*sin(theta); -m2*g*L*sin(theta)];
     xxdot = [xdot; thetadot; M \ (u + v)];
 end
@@ -118,24 +124,25 @@ params.m1 = 5;
 params.m2 = 2;
 params.L = 2;
 params.g = 9.81;
-% Input vector (e.g. feedback control vector)
-u = [0;0];
+% Cart force
+F = 0;
 % Simulation settings
 tspan = linspace(0,15,5000);
 xx0 = [0; pi/2; 0; 0];
-[t, xx] = ode45(@(t,xx) model(t, xx, u, params), tspan, xx0);
+[t, xx] = ode45(@(t,xx) model(t, xx, F, params), tspan, xx0);
 
 %% Plot results and animate
 fig1 = figure(1);
+fig1.Position = [210, 230, 1080, 540]
 subplot(211);
-p1 = plot(t,xx(:, [1,3]));
+p1 = plotyy(t, xx(:, 1), t, xx(:, 3));
 title('Cart translation');
 legend('x', 'xdot');
 subplot(212);
-p2 = plot(t, xx(:, [2,4]));
+p2 = plotyy(t, xx(:, 2), t, xx(:, 4));
 title('Pole rotation');
 legend('theta', 'thetadot');
-% Animate
+% Animation
 fig3 = figure(3);
 for i = 1:numel(t)
     if mod(i,10) == 0
@@ -158,33 +165,40 @@ Recall that our problem is to apply a force on the cart such that the cart moves
 xsym = sym('x', [4,1]);
 Fsym = sym('F');
 tsym = sym('t');
-usym = [Fsym; 0];
-A = jacobian(model(tsym, xsym, usym, params), xsym);
-B = jacobian(model(tsym, xsym, usym, params), Fsym);
+A = jacobian(model(tsym, xsym, Fsym, params), xsym);
+B = jacobian(model(tsym, xsym, Fsym, params), Fsym);
 A = double(subs(A, xsym, [xsym(1); pi; 0; 0]));
 B = double(subs(B, xsym, [xsym(1); pi; 0; 0]));
-clear xsym Fsym tsym usym
+clear xsym Fsym tsym
 
 %% State feedback control with LQR
-Q = diag([500,50,1,1]);
-R = 0.1;
+Q = diag([100,100,1,1]);
+R = 1;
 K = lqr(A,B,Q,R);
 % Stabilize about the (unstable) fixed-point [0; pi; 0; 0]
-u = @(xx) - K * (xx - [0; pi; 0; 0]); 
-xx0 = [0;0;0;0];
-[t,xx] = ode45(@(t,xx) model(t, xx, u(xx), params), tspan, xx0);
+F = @(xx) - K * (xx - [0; pi; 0; 0]); 
+xx0 = [0, 2.2, 0, 0].';
+[t,xx] = ode45(@(t,xx) model(t, xx, F(xx), params), tspan, xx0);
 
 %% Plot results and animate
 fig2 = figure(2);
-subplot(211);
-p1 = plotyy(t,xx(:, 1), t, xx(:,3));
-title('Cart translation');
-legend('x', 'xdot');
-subplot(212);
-p2 = plotyy(t, xx(:,2), t, xx(:,4));
-title('Pole rotation');
-legend('theta', 'thetadot');
+subplot(221);
+p1 = plot(t,xx(:, 1));
+axis tight
+title('Cart position');
+subplot(223);
+p2 = plot(t, xx(:, 3));
+axis tight
+title('Cart velocity')
+subplot(222)
+p3 = plot(t, xx(:,2));
 line([0,15],[pi,pi],'linestyle','--','color','black')
+axis tight
+title('Pole angle');
+subplot(224)
+p4 = plot(t, xx(:,4))
+axis tight
+title('Pole velocity')
 % Animate
 fig4 = figure(4);
 for i = 1:numel(t)
@@ -198,13 +212,12 @@ for i = 1:numel(t)
     end
 end
 
-
 {% endhighlight %}
 
 ![cart-pole-plot2]({{site.baseurl}}/images/cart-pole-plot2.jpg)
 Recall that the system is underactuated. I.e. can only reach the uncontrollable state $$\theta$$ indirectly via the cart-force $$F$$.
 The cart accelerates to the right, overshooting the desired payload angle, and comes back to stabilize it at $$\theta=\pi$$ near the desired cart-position.
-Note that the figures above have two vertical axes, with position along the left axis and velocity along the right.
+The figure with the pendulum angle includes a dashed line showing $$\pi$$.
 
 ### Python Code
 This section shows `Python` code to do the same steps. In the first part of the code, we import required libraries and define three functions:
@@ -229,17 +242,18 @@ import control.matlab as cm
 
 plt.close('all')
 
-def openLoop(xx, t,  u, m1, m2, L, g):
+def openLoop(xx, t, F, m1, m2, L, g):
     x,theta,xdot,thetadot = xx
     M = np.array([[m1+m2, m2*L*np.cos(theta)],[m2*L*np.cos(theta), m2*L**2]])
+    u = np.array([[F],[0]])
     v = np.array([[m2*thetadot**2*np.sin(theta)],[-m2*g*L*np.sin(theta)]])
     temp = np.linalg.inv(M) @ (u + v)
-    xxdot = [xdot, thetadot, temp[0,0], temp[1,0]]
-    return xxdot
+    return [xdot, thetadot, temp[0,0], temp[1,0]]
 
-def modelSym(xx, t, u, m1, m2, L, g):
+def modelSym(xx, t, F, m1, m2, L, g):
     x,theta,xdot,thetadot = xx
     M = sm.Matrix([[m1+m2, m2*L*sm.cos(theta)], [m2*L*sm.cos(theta), m2*L**2]])
+    u = sm.Matrix([F,0])
     v = sm.Matrix([m2*thetadot**2*sm.sin(theta), -m2*g*L*sm.sin(theta)])
     temp = M.inv() @ (u+v)
     return sm.Matrix([xdot, thetadot, temp[0,0], temp[1,0]])
@@ -248,20 +262,20 @@ def closedLoop(xx, t, m1, m2, L, g):
     x,theta,xdot,thetadot = xx
     M = np.array([[m1+m2, m2*L*np.cos(theta)],[m2*L*np.cos(theta), m2*L**2]])
     v = np.array([[m2*thetadot**2*np.sin(theta)],[-m2*g*L*np.sin(theta)]])
-    u = - (K @ (xx - [0, np.pi, 0, 0])).T
+    F = -(K @ (xx - [0, np.pi, 0, 0]))[0,0]
+    u = np.array([[F],[0]])
     temp = np.linalg.inv(M) @ (u + v)
-    xxdot = [xdot, thetadot, temp[0,0], temp[1,0]]
-    return xxdot
+    return [xdot, thetadot, temp[0,0], temp[1,0]]
 {% endhighlight %}
 
 ### Open-loop testing
 To test the model in open-loop, we do the same as before i.e. we drop the pendulum from a horizontal position $$\theta=\pi/2$$
 {% highlight python %}
 #%% Open-Loop Simulation
-u = np.array([[0,0]]).T
+F = 0
 xx0 = [0, np.pi/2, 0, 0]
 t = np.linspace(0,15,2000)
-xx = odeint(openLoop, xx0, t, args=(u,5,2,2,9.81))
+xx = odeint(openLoop, xx0, t, args=(F,5,2,2,9.81))
 
 #%% Plot
 fig, (ax11, ax12) = plt.subplots(nrows=2, ncols=1, figsize=[14,7])
@@ -276,7 +290,8 @@ ax11.legend(['x', 'xdot'], loc='upper right')
 ax12.legend(['theta', 'thetadot'], loc='upper right')
 {% endhighlight %}
 ![cart-pole-plot1]({{site.baseurl}}/images/cart-pole-plot1.png)
-Then we do the linearization required for LQR and simulate the closed-loop model
+### Linearization and Closed-Loop Simulation
+Then we do the linearization required for LQR using the `jacobian()` function from *Sympy* and find the optimal feedback gain $$\mathbf{K}$$ using `lqr()` from the *Control-systems* library, and finally simulate the closed-loop model using `odeint()` from *Scipy*.
 {% highlight python %}
 #%% Implement LQR
 x_s = sm.Symbol('x')
@@ -287,9 +302,7 @@ t_s = sm.Symbol('t')
 F_s = sm.Symbol('F')
 
 xx_s = sm.Matrix([x_s, theta_s, xdot_s, thetadot_s])
-u_s = sm.Matrix([F_s, sm.Symbol('0')])
-
-xxdot_s = modelSym(xx_s, t_s, u_s, 5, 2, 2, 9.81)
+xxdot_s = modelSym(xx_s, t_s, F_s, 5, 2, 2, 9.81)
 A = xxdot_s.jacobian(xx_s)
 B = xxdot_s.jacobian([F_s])
 
@@ -298,13 +311,12 @@ B = sm.lambdify((x_s, theta_s, xdot_s, thetadot_s, F_s), B, modules='numpy')
 A = A(0, np.pi, 0, 0, 0)
 B = B(0, np.pi, 0, 0, 0)
 
-
-Q = np.array([[500,0,0,0],[0,3,0,0],[0,0,1,0],[0,0,0,1]])
-R = 0.1
+Q = np.array([[100,0,0,0],[0,100,0,0],[0,0,1,0],[0,0,0,1]])
+R = 1
 K = cm.lqr(A,B,Q,R)[0]
 
-#%% Close-loop Simulation
-xx0 = [0, 0, 0, 0]
+#%% Closed-loop Simulation
+xx0 = [0, 2.2, 0, 0]
 xx = odeint(closedLoop, xx0, t, args=(5,2,2,9.81))
 
 fig2, (ax21, ax22) = plt.subplots(nrows=2, ncols=1, figsize=[14,7])
@@ -320,6 +332,5 @@ ax22.legend(['theta', 'thetadot'], loc='upper right')
 
 ax22.plot([0,15], [np.pi, np.pi], 'k--')
 
-np.savetxt('data.txt', xx, delimiter=',')
 {% endhighlight %}
 ![cart-pole-plot2]({{site.baseurl}}/images/cart-pole-plot2.png)

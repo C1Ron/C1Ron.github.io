@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Tutorial 1: jekyll and Github-pages"
+title:  ""
 date:   2022-10-21 17:10:00 +0200
 categories: jekyll update
 ---
